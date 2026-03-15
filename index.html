@@ -928,12 +928,8 @@
         // API 伺服器位址設定
         // 若直接用瀏覽器開啟 HTML 檔案，請將下方改成實際後端位址
         // 例如：const API_BASE_URL = 'https://taifexcraw.onrender.com';
-        const API_BASE_URL = (() => {
-            if (window.location.protocol === 'file:') {
-                return 'https://taifexcraw.onrender.com';
-            }
-            return window.location.origin;
-        })();
+
+        const API_BASE_URL = 'https://taifexcraw.onrender.com';
 
         let currentMode = 'single';
 
