@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台指選擇權三大法人數據查詢與對比</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            color: #a0a0a0;
+            font-size: 1rem;
+        }
+
+        /* 模式切換標籤 */
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .mode-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .date-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .date-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .date-group input {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 180px;
+            transition: all 0.3s ease;
+        }
+
+        .date-group input:focus {
+            outline: none;
+            border-color: #0f3460;
+            box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+        }
+
+        .vs-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .btn-search {
+            padding: 12px 35px;
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(15, 52, 96, 0.4);
+        }
+
+        .btn-search:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #ddd;
+            border-top-color: #0f3460;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-panel {
+            display: none;
+        }
+
+        .results-panel.active {
+            display: block;
+        }
+
+        .date-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .date-display.compare {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .date-box {
+            text-align: center;
+        }
+
+        .date-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .date-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .vs-divider {
+            font-size: 1.5rem;
+            font-weight: 700;
+            opacity: 0.8;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .data-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-header.call-dealer {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .card-header.call-foreign {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-header.put-dealer {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .card-header.put-foreign {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .metric-group {
+            margin-bottom: 20px;
+        }
+
+        .metric-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .metric-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .metric-value.positive {
+            color: #e74c3c;
+        }
+
+        .metric-value.negative {
+            color: #27ae60;
+        }
+
+        /* 對比模式樣式 */
+        .compare-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .compare-row:last-child {
+            border-bottom: none;
+        }
+
+        .compare-values {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .value-box {
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .value-date {
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 2px;
+        }
+
+        .value-number {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .diff-box {
+            text-align: center;
+            min-width: 100px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .diff-box.increase {
+            background: #ffe5e5;
+            color: #c0392b;
+        }
+
+        .diff-box.decrease {
+            background: #e8f8f5;
+            color: #27ae60;
+        }
+
+        .diff-box.neutral {
+            background: #f0f0f0;
+            color: #7f8c8d;
+        }
+
+        .diff-arrow {
+            margin-right: 4px;
+        }
+
+        .error-panel {
+            display: none;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #c33;
+        }
+
+        .error-panel.active {
+            display: block;
+        }
+
+        .info-note {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-top: 30px;
+            color: #aaa;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .info-note strong {
+            color: #fff;
+        }
+
+        /* Excel 風格摘要表格 */
+        .summary-section {
+            margin-bottom: 30px;
+        }
+
+        .summary-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .summary-subtitle {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 2px solid #ff9800;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .summary-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .summary-table .header-row {
+            background: #e3f2fd;
+            font-weight: 700;
+            color: #1565c0;
+        }
+
+        .summary-table .category-cell {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .summary-table .type-cell {
+            background: #fff8e1;
+            font-weight: 600;
+            color: #f57c00;
+        }
+
+        .summary-value {
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Consolas', monospace;
+        }
+
+        .summary-value.up {
+            color: #e74c3c;
+        }
+
+        .summary-value.down {
+            color: #27ae60;
+        }
+
+        .summary-value.neutral {
+            color: #7f8c8d;
+        }
+
+        /* Call/Put 區塊標題 */
+        .section-divider {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 30px 0 20px 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-divider.put {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .mode-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mode-tab {
+                width: 200px;
+                text-align: center;
+            }
+
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-group input {
+                width: 100%;
+            }
+
+            .vs-badge {
+                align-self: center;
+                margin: 10px 0;
+            }
+
+            .btn-search {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .date-display.compare {
+                flex-direction: column;
+            }
+
+            .vs-divider {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+
+            .compare-values {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .value-box {
+                text-align: center;
+            }
+
+            .diff-box {
+                margin-top: 5px;
+            }
+
+            .summary-table {
+                font-size: 0.8rem;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 8px 4px;
+            }
+        }
+
+        /* 均價對比表格 */
+        .avg-price-section {
+            margin-bottom: 30px;
+        }
+
+        .avg-price-title {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .avg-price-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.97);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        }
+
+        .avg-price-table th {
+            padding: 10px 14px;
+            text-align: center;
+            background: #e8eaf6;
+            color: #283593;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid #c5cae9;
+        }
+
+        .avg-price-table td {
+            padding: 11px 14px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .avg-price-table .row-label {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #444;
+            text-align: left;
+            padding-left: 18px;
+        }
+
+        .avg-price-table .th-sc { background: #ffebee; color: #b71c1c; }
+        .avg-price-table .th-sp { background: #e8f5e9; color: #1b5e20; }
+        .avg-price-table .th-bc { background: #fff3e0; color: #e65100; }
+        .avg-price-table .th-bp { background: #e3f2fd; color: #0d47a1; }
+
+        .avg-price-table .val-sc   { color: #c62828; font-weight: 700; }
+        .avg-price-table .val-sp   { color: #2e7d32; font-weight: 700; }
+        .avg-price-table .val-bc   { color: #e65100; font-weight: 700; }
+        .avg-price-table .val-bp   { color: #1565c0; font-weight: 700; }
+
+        .avg-price-table .cell-highlight-red  { background: #ffcdd2; }
+        .avg-price-table .cell-highlight-green { background: #c8e6c9; }
+
+        .avg-date-header {
+            background: #ede7f6;
+            color: #4527a0;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            text-align: center;
+            border: 1px solid #d1c4e9;
+        }
+
+        /* 期貨三大法人表格 */
+        .futures-section {
+            margin-bottom: 30px;
+        }
+
+        .futures-main-title {
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b4332 100%);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .futures-product-title {
+            background: #e8f5e9;
+            color: #1b5e20;
+            padding: 9px 18px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-left: 4px solid #2e7d32;
+            border-bottom: 1px solid #c8e6c9;
+        }
+
+        .futures-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.97);
+        }
+
+        .futures-table:last-of-type {
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .futures-table th {
+            padding: 9px 12px;
+            text-align: center;
+            background: #f1f8e9;
+            color: #33691e;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border: 1px solid #dcedc8;
+        }
+
+        .futures-table td {
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+            font-size: 0.9rem;
+        }
+
+        .futures-table .f-row-label {
+            background: #f9fbe7;
+            font-weight: 600;
+            color: #444;
+            text-align: left;
+            padding-left: 18px;
+        }
+
+        .futures-table .f-group-header {
+            background: #fff8e1;
+            color: #f57f17;
+            font-weight: 700;
+            font-size: 0.82rem;
+            text-align: center;
+        }
+
+        .futures-table .val-pos { color: #c62828; font-weight: 700; }
+        .futures-table .val-neg { color: #2e7d32; font-weight: 700; }
+        .futures-table .val-neu { color: #555; font-weight: 600; }
+
+        .futures-date-th {
+            background: #ede7f6 !important;
+            color: #4527a0 !important;
+            font-size: 0.82rem !important;
+        }
+
+        .futures-wrapper {
+            background: rgba(255,255,255,0.97);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 台指選擇權三大法人數據查詢</h1>
+            <p>查詢自營商與外資的買權、賣權交易數據，支援單日查詢與雙日對比</p>
+        </div>
+
+        <!-- 模式切換 -->
+        <div class="mode-tabs">
+            <div class="mode-tab active" onclick="switchMode('single')" id="tab-single">
+                📅 單一日期查詢
+            </div>
+            <div class="mode-tab" onclick="switchMode('compare')" id="tab-compare">
+                ⚖️ 雙日期對比
+            </div>
+        </div>
+
+        <div class="search-panel">
+            <form class="search-form" id="searchForm">
+                <!-- 單一日期模式 -->
+                <div id="singleDateGroup" class="date-group">
+                    <label for="queryDate">查詢日期</label>
+                    <input type="text" id="queryDate" placeholder="YYYY/MM/DD" maxlength="10" autocomplete="off">
+                </div>
+
+                <!-- 對比模式 -->
+                <div id="compareGroup1" class="date-group" style="display: none;">
+                    <label for="startDate">📅 起始日期</label>
+                    <input type="text" id="startDate" placeholder="YYYY/MM/DD" maxlength="10" autocomplete="off">
+                </div>
+
+                <div id="vsBadge" class="vs-badge" style="display: none;">
+                    VS
+                </div>
+
+                <div id="compareGroup2" class="date-group" style="display: none;">
+                    <label for="endDate">📅 對比日期</label>
+                    <input type="text" id="endDate" placeholder="YYYY/MM/DD" maxlength="10" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn-search" id="searchBtn">
+                    <span>🔍</span>
+                    <span id="btnText">查詢數據</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">正在擷取數據，請稍候...</p>
+        </div>
+
+        <div class="error-panel" id="errorPanel">
+            <p id="errorMessage"></p>
+        </div>
+
+        <!-- 單一日期結果 -->
+        <div class="results-panel" id="resultsPanel">
+            <div class="date-display" id="dateDisplay"></div>
+            <div class="data-grid" id="dataGrid"></div>
+        </div>
+
+        <!-- 對比模式結果 -->
+        <div class="results-panel" id="compareResultsPanel">
+            <div class="date-display compare" id="compareDateDisplay"></div>
+
+            <!-- Call 區塊 -->
+            <div class="section-divider">📈 CALL (買權) 數據變化</div>
+            
+            <div class="summary-section">
+                <div class="summary-title">交易口數與金額變化</div>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>類別</th>
+                            <th>買賣差額口數變化</th>
+                            <th>買賣差額契約金額變化 (千元)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callTradingChangeBody">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-subtitle">未平倉餘額變化</div>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>買賣口數差額變化</th>
+                            <th>買賣契約金額變化 (千元)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callOiChangeBody">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Put 區塊 -->
+            <div class="section-divider put">📉 PUT (賣權) 數據變化</div>
+            
+            <div class="summary-section">
+                <div class="summary-title">交易口數與金額變化</div>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>類別</th>
+                            <th>買賣差額口數變化</th>
+                            <th>買賣差額契約金額變化 (千元)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="putTradingChangeBody">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-subtitle">未平倉餘額變化</div>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>買賣口數差額變化</th>
+                            <th>買賣契約金額變化 (千元)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="putOiChangeBody">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+
+            <!-- 均價對比表格 -->
+            <div class="section-divider" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%); margin-top:10px;">
+                💰 均價對比 (BC / SC / BP / SP)
+            </div>
+            <div class="avg-price-section">
+                <div class="avg-price-title">各身份別 均價對比表</div>
+                <div id="avgPriceTableContainer"></div>
+            </div>
+
+
+            <!-- 期貨三大法人數據 -->
+            <div class="section-divider" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b4332 100%); margin-top:10px;">
+                📊 期貨三大法人 (臺股/小型臺指/微型臺指)
+            </div>
+            <div class="futures-section">
+                <div class="futures-main-title">期貨三大法人 雙日對比表</div>
+                <div class="futures-wrapper" id="futuresTableContainer">
+                    <div style="padding:20px;text-align:center;color:#999;">載入中...</div>
+                </div>
+            </div>
+
+            <!-- 詳細對比卡片 -->
+            <div class="data-grid" id="compareDataGrid" style="margin-top: 30px;"></div>
+        </div>
+
+        <div class="info-note">
+            <strong>📌 資料說明：</strong><br>
+            • 數據來源：台灣期貨交易所<br>
+            • 資料內容包含交易口數、契約金額、未平倉餘額<br>
+            • 僅顯示「台指選擇權」數據<br>
+            • 查詢日期需為交易日，非交易日將無法取得數據<br>
+            • <span style="color: #f5576c;">對比模式</span>：紅色表示增加(▲)，綠色表示減少(▼)<br>
+            • <strong>交易口數與金額變化</strong>：計算兩日交易買賣差額的變化<br>
+            • <strong>未平倉餘額變化</strong>：計算兩日未平倉買賣差額的變化
+        </div>
+    </div>
+
+    <script>
+        // API 伺服器位址設定
+        // 若直接用瀏覽器開啟 HTML 檔案，請將下方改成實際後端位址
+        // 例如：const API_BASE_URL = 'https://taifexcraw.onrender.com';
+        const API_BASE_URL = (() => {
+            if (window.location.protocol === 'file:') {
+                return 'https://taifexcraw.onrender.com';
+            }
+            return window.location.origin;
+        })();
+
+        let currentMode = 'single';
+
+        // 日期輸入格式化
+        function setupDateInput(inputId) {
+            const input = document.getElementById(inputId);
+            input.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 4) {
+                    value = value.slice(0, 4) + '/' + value.slice(4);
+                }
+                if (value.length >= 7) {
+                    value = value.slice(0, 7) + '/' + value.slice(7, 9);
+                }
+                e.target.value = value;
+            });
+        }
+
+        setupDateInput('queryDate');
+        setupDateInput('startDate');
+        setupDateInput('endDate');
+
+        // 設置預設日期
+        const today = new Date();
+        const formattedDate = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+        document.getElementById('queryDate').value = formattedDate;
+        document.getElementById('startDate').value = formattedDate;
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const formattedYesterday = `${yesterday.getFullYear()}/${String(yesterday.getMonth() + 1).padStart(2, '0')}/${String(yesterday.getDate()).padStart(2, '0')}`;
+        document.getElementById('endDate').value = formattedYesterday;
+
+        // 切換模式
+        function switchMode(mode) {
+            currentMode = mode;
+
+            // 更新標籤樣式
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${mode}`).classList.add('active');
+
+            // 顯示/隱藏對應表單元素
+            if (mode === 'single') {
+                document.getElementById('singleDateGroup').style.display = 'flex';
+                document.getElementById('compareGroup1').style.display = 'none';
+                document.getElementById('vsBadge').style.display = 'none';
+                document.getElementById('compareGroup2').style.display = 'none';
+                document.getElementById('btnText').textContent = '查詢數據';
+            } else {
+                document.getElementById('singleDateGroup').style.display = 'none';
+                document.getElementById('compareGroup1').style.display = 'flex';
+                document.getElementById('vsBadge').style.display = 'flex';
+                document.getElementById('compareGroup2').style.display = 'flex';
+                document.getElementById('btnText').textContent = '對比數據';
+            }
+
+            // 隱藏結果
+            document.getElementById('resultsPanel').classList.remove('active');
+            document.getElementById('compareResultsPanel').classList.remove('active');
+            document.getElementById('errorPanel').classList.remove('active');
+        }
+
+        // 表單提交
+        document.getElementById('searchForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            const errorPanel = document.getElementById('errorPanel');
+
+            // 顯示載入狀態
+            searchBtn.disabled = true;
+            loading.classList.add('active');
+            errorPanel.classList.remove('active');
+
+            try {
+                if (currentMode === 'single') {
+                    loadingText.textContent = '正在擷取數據，請稍候...';
+                    await handleSingleQuery();
+                } else {
+                    loadingText.textContent = '正在擷取並比對數據，請稍候...';
+                    await handleCompareQuery();
+                }
+            } catch (error) {
+                showError('網路連線錯誤，請稍後再試');
+                console.error('Error:', error);
+            } finally {
+                searchBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+
+        async function handleSingleQuery() {
+            const queryDate = document.getElementById('queryDate').value.trim();
+
+            if (!/^\d{4}\/\d{2}\/\d{2}$/.test(queryDate)) {
+                showError('請輸入正確的日期格式 (YYYY/MM/DD)');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/query`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: queryDate })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                displaySingleResults(result.data);
+            } else {
+                showError(result.error || '查詢失敗');
+            }
+        }
+
+        async function handleCompareQuery() {
+            const startDate = document.getElementById('startDate').value.trim();
+            const endDate = document.getElementById('endDate').value.trim();
+
+            if (!/^\d{4}\/\d{2}\/\d{2}$/.test(startDate) || !/^\d{4}\/\d{2}\/\d{2}$/.test(endDate)) {
+                showError('請輸入正確的日期格式 (YYYY/MM/DD)');
+                return;
+            }
+
+            // 並行查詢兩個日期
+            const [response1, response2] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: startDate })
+                }),
+                fetch(`${API_BASE_URL}/api/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: endDate })
+                })
+            ]);
+
+            const result1 = await response1.json();
+            const result2 = await response2.json();
+
+            if (!result1.success) {
+                showError(`起始日期查詢失敗: ${result1.error || '無法取得數據'}`);
+                return;
+            }
+
+            if (!result2.success) {
+                showError(`對比日期查詢失敗: ${result2.error || '無法取得數據'}`);
+                return;
+            }
+
+            await displayCompareResults(result1.data, result2.data);
+        }
+
+        function showError(message) {
+            const errorPanel = document.getElementById('errorPanel');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorPanel.classList.add('active');
+        }
+
+        function displaySingleResults(data) {
+            document.getElementById('compareResultsPanel').classList.remove('active');
+            const resultsPanel = document.getElementById('resultsPanel');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const dataGrid = document.getElementById('dataGrid');
+
+            dateDisplay.textContent = `📅 ${data.date} 台指選擇權數據`;
+
+            const txo = data.txo;
+
+            dataGrid.innerHTML = `
+                ${createDataCard('call-dealer', '🟢 自營商買權 (Call)', txo.call.dealer)}
+                ${createDataCard('call-foreign', '🔵 外資買權 (Call)', txo.call.foreign)}
+                ${createDataCard('put-dealer', '🔴 自營商賣權 (Put)', txo.put.dealer)}
+                ${createDataCard('put-foreign', '🟡 外資賣權 (Put)', txo.put.foreign)}
+            `;
+
+            resultsPanel.classList.add('active');
+        }
+
+        async function displayCompareResults(data1, data2) {
+            document.getElementById('resultsPanel').classList.remove('active');
+            const comparePanel = document.getElementById('compareResultsPanel');
+            const dateDisplay = document.getElementById('compareDateDisplay');
+            const dataGrid = document.getElementById('compareDataGrid');
+
+            dateDisplay.innerHTML = `
+                <div class="date-box">
+                    <div class="date-label">起始日期</div>
+                    <div class="date-value">${data1.date}</div>
+                </div>
+                <div class="vs-divider">⚡ VS ⚡</div>
+                <div class="date-box">
+                    <div class="date-label">對比日期</div>
+                    <div class="date-value">${data2.date}</div>
+                </div>
+            `;
+
+            const txo1 = data1.txo;
+            const txo2 = data2.txo;
+
+            // 生成 Excel 風格的摘要表格
+            generateExcelSummary(txo1, txo2);
+
+            // 生成均價對比表
+            generateAvgPriceTable(txo1, txo2, data1.date, data2.date);
+
+            // 生成期貨三大法人表
+            await generateFuturesTable(data1.date, data2.date);
+
+            // 生成詳細對比卡片
+            dataGrid.innerHTML = `
+                ${createCompareCard('call-dealer', '🟢 自營商買權 (Call)', txo1.call.dealer, txo2.call.dealer, data1.date, data2.date)}
+                ${createCompareCard('call-foreign', '🔵 外資買權 (Call)', txo1.call.foreign, txo2.call.foreign, data1.date, data2.date)}
+                ${createCompareCard('put-dealer', '🔴 自營商賣權 (Put)', txo1.put.dealer, txo2.put.dealer, data1.date, data2.date)}
+                ${createCompareCard('put-foreign', '🟡 外資賣權 (Put)', txo1.put.foreign, txo2.put.foreign, data1.date, data2.date)}
+            `;
+
+            comparePanel.classList.add('active');
+        }
+
+        function createDataCard(type, title, data) {
+            if (!data || Object.keys(data).length === 0) return '';
+
+            const netVolumeClass = parseInt(data.net_volume?.replace(/,/g, '') || 0) > 0 ? 'positive' : 'negative';
+            const netAmountClass = parseInt(data.net_amount?.replace(/,/g, '') || 0) > 0 ? 'positive' : 'negative';
+            const oiNetVolumeClass = parseInt(data.oi_net_volume?.replace(/,/g, '') || 0) > 0 ? 'positive' : 'negative';
+            const oiNetAmountClass = parseInt(data.oi_net_amount?.replace(/,/g, '') || 0) > 0 ? 'positive' : 'negative';
+
+            return `
+                <div class="data-card">
+                    <div class="card-header ${type}">${title}</div>
+                    <div class="card-body">
+                        <div class="metric-group">
+                            <div class="metric-title">📈 交易口數與契約金額</div>
+                            <div class="metric-row">
+                                <span class="metric-label">買方口數</span>
+                                <span class="metric-value">${data.buy_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買方契約金額 (千元)</span>
+                                <span class="metric-value">${data.buy_amount || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">賣方口數</span>
+                                <span class="metric-value">${data.sell_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">賣方契約金額 (千元)</span>
+                                <span class="metric-value">${data.sell_amount || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買賣差額口數</span>
+                                <span class="metric-value ${netVolumeClass}">${data.net_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買賣差額契約金額 (千元)</span>
+                                <span class="metric-value ${netAmountClass}">${data.net_amount || '-'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <div class="metric-title">📊 未平倉餘額</div>
+                            <div class="metric-row">
+                                <span class="metric-label">買方口數</span>
+                                <span class="metric-value">${data.oi_buy_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買方契約金額 (千元)</span>
+                                <span class="metric-value">${data.oi_buy_amount || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">賣方口數</span>
+                                <span class="metric-value">${data.oi_sell_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">賣方契約金額 (千元)</span>
+                                <span class="metric-value">${data.oi_sell_amount || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買賣差額口數</span>
+                                <span class="metric-value ${oiNetVolumeClass}">${data.oi_net_volume || '-'}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">買賣差額契約金額 (千元)</span>
+                                <span class="metric-value ${oiNetAmountClass}">${data.oi_net_amount || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createCompareCard(type, title, data1, data2, date1, date2) {
+            if (!data1 || !data2) return '';
+
+            const fields = [
+                { key: 'buy_volume', label: '買方口數' },
+                { key: 'buy_amount', label: '買方契約金額 (千元)' },
+                { key: 'sell_volume', label: '賣方口數' },
+                { key: 'sell_amount', label: '賣方契約金額 (千元)' },
+                { key: 'net_volume', label: '買賣差額口數', highlight: true },
+                { key: 'net_amount', label: '買賣差額契約金額 (千元)', highlight: true },
+                { key: 'oi_buy_volume', label: '未平倉買方口數' },
+                { key: 'oi_buy_amount', label: '未平倉買方契約金額 (千元)' },
+                { key: 'oi_sell_volume', label: '未平倉賣方口數' },
+                { key: 'oi_sell_amount', label: '未平倉賣方契約金額 (千元)' },
+                { key: 'oi_net_volume', label: '未平倉買賣差額口數', highlight: true },
+                { key: 'oi_net_amount', label: '未平倉買賣差額契約金額 (千元)', highlight: true }
+            ];
+
+            let rows = '';
+            fields.forEach(field => {
+                const val1 = parseInt(data1[field.key]?.replace(/,/g, '') || 0);
+                const val2 = parseInt(data2[field.key]?.replace(/,/g, '') || 0);
+                const diff = val2 - val1;
+                const diffPercent = val1 !== 0 ? ((diff / val1) * 100).toFixed(1) : 0;
+
+                const diffClass = diff > 0 ? 'increase' : (diff < 0 ? 'decrease' : 'neutral');
+                const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
+                const sign = diff > 0 ? '+' : '';
+
+                rows += `
+                    <div class="compare-row">
+                        <span class="metric-label">${field.label}</span>
+                        <div class="compare-values">
+                            <div class="value-box">
+                                <div class="value-date">${date1}</div>
+                                <div class="value-number">${data1[field.key] || '-'}</div>
+                            </div>
+                            <div class="diff-box ${diffClass}">
+                                <span class="diff-arrow">${arrow}</span>
+                                ${sign}${diff.toLocaleString()}<br>
+                                <small>(${sign}${diffPercent}%)</small>
+                            </div>
+                            <div class="value-box">
+                                <div class="value-date">${date2}</div>
+                                <div class="value-number">${data2[field.key] || '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="data-card">
+                    <div class="card-header ${type}">${title}</div>
+                    <div class="card-body">
+                        ${rows}
+                    </div>
+                </div>
+            `;
+        }
+
+
+
+        // ── 期貨三大法人表格 ──
+        // 合約乘數: 臺股期貨=200, 小型臺指=50, 微型臺指=10
+        const FUTURES_MULTIPLIER = {'臺股期貨': 200, '小型臺指期貨': 50, '微型臺指期貨': 10};
+        const FUTURES_TARGETS = ['臺股期貨', '小型臺指期貨', '微型臺指期貨'];
+
+        // 均價公式：契約淨額(千元) * 1000 / 合約乘數 / 淨額口數
+        function calcFuturesAvg(amount_str, volume_str, multiplier) {
+            const amount = parseFloat((amount_str || '').replace(/,/g, ''));
+            const volume = parseFloat((volume_str || '').replace(/,/g, ''));
+            if (!volume || volume === 0 || !multiplier) return null;
+            return Math.round((amount * 1000 / multiplier / volume) * 10) / 10;
+        }
+
+        function fmtFut(val) {
+            if (val === null || isNaN(val)) return '—';
+            return val.toLocaleString('zh-TW', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+        }
+
+        function fmtFutNum(str) {
+            if (!str) return '—';
+            const n = parseInt((str || '').replace(/,/g, ''));
+            if (isNaN(n)) return '—';
+            return n.toLocaleString('zh-TW');
+        }
+
+        function futValClass(str) {
+            if (!str) return 'val-neu';
+            const n = parseInt((str || '').replace(/,/g, ''));
+            if (isNaN(n)) return 'val-neu';
+            return n > 0 ? 'val-pos' : (n < 0 ? 'val-neg' : 'val-neu');
+        }
+
+        function futAvgClass(val) {
+            if (val === null || isNaN(val)) return 'val-neu';
+            return val > 0 ? 'val-pos' : (val < 0 ? 'val-neg' : 'val-neu');
+        }
+
+        async function generateFuturesTable(date1, date2) {
+            const container = document.getElementById('futuresTableContainer');
+            container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">正在抓取期貨數據...</div>';
+
+            try {
+                const [r1, r2] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/query_futures`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({date: date1})
+                    }),
+                    fetch(`${API_BASE_URL}/api/query_futures`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({date: date2})
+                    })
+                ]);
+
+                const res1 = await r1.json();
+                const res2 = await r2.json();
+
+                if (!res1.success || !res2.success) {
+                    container.innerHTML = `<div style="padding:16px;text-align:center;color:#c62828;">⚠ 期貨數據載入失敗：${(!res1.success ? res1.error : res2.error)}</div>`;
+                    return;
+                }
+
+                const fut1 = res1.data.futures;
+                const fut2 = res2.data.futures;
+
+                let html = '';
+
+                FUTURES_TARGETS.forEach(product => {
+                    const mult = FUTURES_MULTIPLIER[product];
+                    const d1 = fut1[product] || {};
+                    const d2 = fut2[product] || {};
+                    const dealer1 = d1.dealer || {};
+                    const foreign1 = d1.foreign || {};
+                    const dealer2 = d2.dealer || {};
+                    const foreign2 = d2.foreign || {};
+
+                    // 計算均價
+                    const dAvgNet1  = calcFuturesAvg(dealer1.net_amount,    dealer1.net_volume,    mult);
+                    const dAvgOi1   = calcFuturesAvg(dealer1.oi_net_amount,  dealer1.oi_net_volume,  mult);
+                    const fAvgNet1  = calcFuturesAvg(foreign1.net_amount,   foreign1.net_volume,   mult);
+                    const fAvgOi1   = calcFuturesAvg(foreign1.oi_net_amount, foreign1.oi_net_volume, mult);
+                    const dAvgNet2  = calcFuturesAvg(dealer2.net_amount,    dealer2.net_volume,    mult);
+                    const dAvgOi2   = calcFuturesAvg(dealer2.oi_net_amount,  dealer2.oi_net_volume,  mult);
+                    const fAvgNet2  = calcFuturesAvg(foreign2.net_amount,   foreign2.net_volume,   mult);
+                    const fAvgOi2   = calcFuturesAvg(foreign2.oi_net_amount, foreign2.oi_net_volume, mult);
+
+                    html += `
+                        <div class="futures-product-title">📌 ${product}（合約乘數 ${mult}）</div>
+                        <table class="futures-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width:70px;">身份別</th>
+                                    <th colspan="3" class="futures-date-th">📅 ${date1}</th>
+                                    <th colspan="3" class="futures-date-th">📅 ${date2}</th>
+                                </tr>
+                                <tr>
+                                    <th>多空淨額口數</th>
+                                    <th>淨額契約金額(千元)</th>
+                                    <th>均價(點)</th>
+                                    <th>多空淨額口數</th>
+                                    <th>淨額契約金額(千元)</th>
+                                    <th>均價(點)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="f-group-header">▸ 多空淨額（當日交易）</td>
+                                </tr>
+                                <tr>
+                                    <td class="f-row-label">自營商</td>
+                                    <td class="${futValClass(dealer1.net_volume)}">${fmtFutNum(dealer1.net_volume)}</td>
+                                    <td class="${futValClass(dealer1.net_amount)}">${fmtFutNum(dealer1.net_amount)}</td>
+                                    <td class="${futAvgClass(dAvgNet1)}">${fmtFut(dAvgNet1)}</td>
+                                    <td class="${futValClass(dealer2.net_volume)}">${fmtFutNum(dealer2.net_volume)}</td>
+                                    <td class="${futValClass(dealer2.net_amount)}">${fmtFutNum(dealer2.net_amount)}</td>
+                                    <td class="${futAvgClass(dAvgNet2)}">${fmtFut(dAvgNet2)}</td>
+                                </tr>
+                                <tr>
+                                    <td class="f-row-label">外資</td>
+                                    <td class="${futValClass(foreign1.net_volume)}">${fmtFutNum(foreign1.net_volume)}</td>
+                                    <td class="${futValClass(foreign1.net_amount)}">${fmtFutNum(foreign1.net_amount)}</td>
+                                    <td class="${futAvgClass(fAvgNet1)}">${fmtFut(fAvgNet1)}</td>
+                                    <td class="${futValClass(foreign2.net_volume)}">${fmtFutNum(foreign2.net_volume)}</td>
+                                    <td class="${futValClass(foreign2.net_amount)}">${fmtFutNum(foreign2.net_amount)}</td>
+                                    <td class="${futAvgClass(fAvgNet2)}">${fmtFut(fAvgNet2)}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7" class="f-group-header">▸ 未平倉餘額</td>
+                                </tr>
+                                <tr>
+                                    <td class="f-row-label">自營商</td>
+                                    <td class="${futValClass(dealer1.oi_net_volume)}">${fmtFutNum(dealer1.oi_net_volume)}</td>
+                                    <td class="${futValClass(dealer1.oi_net_amount)}">${fmtFutNum(dealer1.oi_net_amount)}</td>
+                                    <td class="${futAvgClass(dAvgOi1)}">${fmtFut(dAvgOi1)}</td>
+                                    <td class="${futValClass(dealer2.oi_net_volume)}">${fmtFutNum(dealer2.oi_net_volume)}</td>
+                                    <td class="${futValClass(dealer2.oi_net_amount)}">${fmtFutNum(dealer2.oi_net_amount)}</td>
+                                    <td class="${futAvgClass(dAvgOi2)}">${fmtFut(dAvgOi2)}</td>
+                                </tr>
+                                <tr>
+                                    <td class="f-row-label">外資</td>
+                                    <td class="${futValClass(foreign1.oi_net_volume)}">${fmtFutNum(foreign1.oi_net_volume)}</td>
+                                    <td class="${futValClass(foreign1.oi_net_amount)}">${fmtFutNum(foreign1.oi_net_amount)}</td>
+                                    <td class="${futAvgClass(fAvgOi1)}">${fmtFut(fAvgOi1)}</td>
+                                    <td class="${futValClass(foreign2.oi_net_volume)}">${fmtFutNum(foreign2.oi_net_volume)}</td>
+                                    <td class="${futValClass(foreign2.oi_net_amount)}">${fmtFutNum(foreign2.oi_net_amount)}</td>
+                                    <td class="${futAvgClass(fAvgOi2)}">${fmtFut(fAvgOi2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch(err) {
+                container.innerHTML = `<div style="padding:16px;text-align:center;color:#c62828;">⚠ 期貨數據載入失敗：${err.message}</div>`;
+            }
+        }
+
+        // ── 均價計算公式 ──
+        // BC = (買權買方契約金額 / 買權買方口數) * 20
+        // SC = (買權賣方契約金額 / 買權賣方口數) * 20
+        // BP = (賣權買方契約金額 / 賣權買方口數) * 20
+        // SP = (賣權賣方契約金額 / 賣權賣方口數) * 20
+        function calcAvg(amount_str, volume_str) {
+            const amount = parseFloat((amount_str || '').replace(/,/g, ''));
+            const volume = parseFloat((volume_str || '').replace(/,/g, ''));
+            if (!volume || volume === 0) return null;
+            return Math.round((amount / volume) * 20 * 10) / 10;
+        }
+
+        function fmtAvg(val) {
+            if (val === null || isNaN(val)) return '—';
+            return val.toLocaleString('zh-TW', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        }
+
+        function generateAvgPriceTable(txo1, txo2, date1, date2) {
+            // 計算所有均價 (日期1)
+            const d1 = {
+                dealer_sc: calcAvg(txo1.call.dealer.sell_amount, txo1.call.dealer.sell_volume),
+                dealer_bc: calcAvg(txo1.call.dealer.buy_amount,  txo1.call.dealer.buy_volume),
+                dealer_sp: calcAvg(txo1.put.dealer.sell_amount,  txo1.put.dealer.sell_volume),
+                dealer_bp: calcAvg(txo1.put.dealer.buy_amount,   txo1.put.dealer.buy_volume),
+                foreign_sc: calcAvg(txo1.call.foreign.sell_amount, txo1.call.foreign.sell_volume),
+                foreign_bc: calcAvg(txo1.call.foreign.buy_amount,  txo1.call.foreign.buy_volume),
+                foreign_sp: calcAvg(txo1.put.foreign.sell_amount,  txo1.put.foreign.sell_volume),
+                foreign_bp: calcAvg(txo1.put.foreign.buy_amount,   txo1.put.foreign.buy_volume),
+            };
+            // 計算所有均價 (日期2)
+            const d2 = {
+                dealer_sc: calcAvg(txo2.call.dealer.sell_amount, txo2.call.dealer.sell_volume),
+                dealer_bc: calcAvg(txo2.call.dealer.buy_amount,  txo2.call.dealer.buy_volume),
+                dealer_sp: calcAvg(txo2.put.dealer.sell_amount,  txo2.put.dealer.sell_volume),
+                dealer_bp: calcAvg(txo2.put.dealer.buy_amount,   txo2.put.dealer.buy_volume),
+                foreign_sc: calcAvg(txo2.call.foreign.sell_amount, txo2.call.foreign.sell_volume),
+                foreign_bc: calcAvg(txo2.call.foreign.buy_amount,  txo2.call.foreign.buy_volume),
+                foreign_sp: calcAvg(txo2.put.foreign.sell_amount,  txo2.put.foreign.sell_volume),
+                foreign_bp: calcAvg(txo2.put.foreign.buy_amount,   txo2.put.foreign.buy_volume),
+            };
+
+            // 根據圖示：SC用紅底、SP用綠底 (sell call = 賣方受壓 → 紅；sell put = 賣方獲利 → 綠)
+            // BC 無特殊底色，BP 無特殊底色（數字自有顏色）
+            function cellClass(key) {
+                if (key.endsWith('sc')) return 'val-sc cell-highlight-red';
+                if (key.endsWith('sp')) return 'val-sp cell-highlight-green';
+                if (key.endsWith('bc')) return 'val-bc';
+                if (key.endsWith('bp')) return 'val-bp';
+                return '';
+            }
+
+            const container = document.getElementById('avgPriceTableContainer');
+            container.innerHTML = `
+                <table class="avg-price-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width:80px;">身份別</th>
+                            <th colspan="4" class="avg-date-header">📅 ${date1}</th>
+                            <th colspan="4" class="avg-date-header">📅 ${date2}</th>
+                        </tr>
+                        <tr>
+                            <th class="th-sc">SC<br><small>買權賣方</small></th>
+                            <th class="th-sp">SP<br><small>賣權賣方</small></th>
+                            <th class="th-bc">BC<br><small>買權買方</small></th>
+                            <th class="th-bp">BP<br><small>賣權買方</small></th>
+                            <th class="th-sc">SC<br><small>買權賣方</small></th>
+                            <th class="th-sp">SP<br><small>賣權賣方</small></th>
+                            <th class="th-bc">BC<br><small>買權買方</small></th>
+                            <th class="th-bp">BP<br><small>賣權買方</small></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="row-label">自營商</td>
+                            <td class="${cellClass('dealer_sc')}">${fmtAvg(d1.dealer_sc)}</td>
+                            <td class="${cellClass('dealer_sp')}">${fmtAvg(d1.dealer_sp)}</td>
+                            <td class="${cellClass('dealer_bc')}">${fmtAvg(d1.dealer_bc)}</td>
+                            <td class="${cellClass('dealer_bp')}">${fmtAvg(d1.dealer_bp)}</td>
+                            <td class="${cellClass('dealer_sc')}">${fmtAvg(d2.dealer_sc)}</td>
+                            <td class="${cellClass('dealer_sp')}">${fmtAvg(d2.dealer_sp)}</td>
+                            <td class="${cellClass('dealer_bc')}">${fmtAvg(d2.dealer_bc)}</td>
+                            <td class="${cellClass('dealer_bp')}">${fmtAvg(d2.dealer_bp)}</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">外資</td>
+                            <td class="${cellClass('foreign_sc')}">${fmtAvg(d1.foreign_sc)}</td>
+                            <td class="${cellClass('foreign_sp')}">${fmtAvg(d1.foreign_sp)}</td>
+                            <td class="${cellClass('foreign_bc')}">${fmtAvg(d1.foreign_bc)}</td>
+                            <td class="${cellClass('foreign_bp')}">${fmtAvg(d1.foreign_bp)}</td>
+                            <td class="${cellClass('foreign_sc')}">${fmtAvg(d2.foreign_sc)}</td>
+                            <td class="${cellClass('foreign_sp')}">${fmtAvg(d2.foreign_sp)}</td>
+                            <td class="${cellClass('foreign_bc')}">${fmtAvg(d2.foreign_bc)}</td>
+                            <td class="${cellClass('foreign_bp')}">${fmtAvg(d2.foreign_bp)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Excel 風格摘要生成函數 - 完全符合 Excel 排列
+        function generateExcelSummary(txo1, txo2) {
+            // ========== CALL 區塊 ==========
+            
+            // Call - 交易口數與金額變化 (net_volume, net_amount 的變化)
+            const callDealerNetVol1 = parseInt(txo1.call.dealer.net_volume?.replace(/,/g, '') || 0);
+            const callDealerNetVol2 = parseInt(txo2.call.dealer.net_volume?.replace(/,/g, '') || 0);
+            const callDealerNetVolChange = callDealerNetVol2 - callDealerNetVol1;
+            
+            const callDealerNetAmt1 = parseInt(txo1.call.dealer.net_amount?.replace(/,/g, '') || 0);
+            const callDealerNetAmt2 = parseInt(txo2.call.dealer.net_amount?.replace(/,/g, '') || 0);
+            const callDealerNetAmtChange = callDealerNetAmt2 - callDealerNetAmt1;
+            
+            const callForeignNetVol1 = parseInt(txo1.call.foreign.net_volume?.replace(/,/g, '') || 0);
+            const callForeignNetVol2 = parseInt(txo2.call.foreign.net_volume?.replace(/,/g, '') || 0);
+            const callForeignNetVolChange = callForeignNetVol2 - callForeignNetVol1;
+            
+            const callForeignNetAmt1 = parseInt(txo1.call.foreign.net_amount?.replace(/,/g, '') || 0);
+            const callForeignNetAmt2 = parseInt(txo2.call.foreign.net_amount?.replace(/,/g, '') || 0);
+            const callForeignNetAmtChange = callForeignNetAmt2 - callForeignNetAmt1;
+
+            // Call - 未平倉餘額變化 (oi_net_volume, oi_net_amount 的變化)
+            const callDealerOiNetVol1 = parseInt(txo1.call.dealer.oi_net_volume?.replace(/,/g, '') || 0);
+            const callDealerOiNetVol2 = parseInt(txo2.call.dealer.oi_net_volume?.replace(/,/g, '') || 0);
+            const callDealerOiNetVolChange = callDealerOiNetVol2 - callDealerOiNetVol1;
+            
+            const callDealerOiNetAmt1 = parseInt(txo1.call.dealer.oi_net_amount?.replace(/,/g, '') || 0);
+            const callDealerOiNetAmt2 = parseInt(txo2.call.dealer.oi_net_amount?.replace(/,/g, '') || 0);
+            const callDealerOiNetAmtChange = callDealerOiNetAmt2 - callDealerOiNetAmt1;
+            
+            const callForeignOiNetVol1 = parseInt(txo1.call.foreign.oi_net_volume?.replace(/,/g, '') || 0);
+            const callForeignOiNetVol2 = parseInt(txo2.call.foreign.oi_net_volume?.replace(/,/g, '') || 0);
+            const callForeignOiNetVolChange = callForeignOiNetVol2 - callForeignOiNetVol1;
+            
+            const callForeignOiNetAmt1 = parseInt(txo1.call.foreign.oi_net_amount?.replace(/,/g, '') || 0);
+            const callForeignOiNetAmt2 = parseInt(txo2.call.foreign.oi_net_amount?.replace(/,/g, '') || 0);
+            const callForeignOiNetAmtChange = callForeignOiNetAmt2 - callForeignOiNetAmt1;
+
+            // ========== PUT 區塊 ==========
+            
+            // Put - 交易口數與金額變化
+            const putDealerNetVol1 = parseInt(txo1.put.dealer.net_volume?.replace(/,/g, '') || 0);
+            const putDealerNetVol2 = parseInt(txo2.put.dealer.net_volume?.replace(/,/g, '') || 0);
+            const putDealerNetVolChange = putDealerNetVol2 - putDealerNetVol1;
+            
+            const putDealerNetAmt1 = parseInt(txo1.put.dealer.net_amount?.replace(/,/g, '') || 0);
+            const putDealerNetAmt2 = parseInt(txo2.put.dealer.net_amount?.replace(/,/g, '') || 0);
+            const putDealerNetAmtChange = putDealerNetAmt2 - putDealerNetAmt1;
+            
+            const putForeignNetVol1 = parseInt(txo1.put.foreign.net_volume?.replace(/,/g, '') || 0);
+            const putForeignNetVol2 = parseInt(txo2.put.foreign.net_volume?.replace(/,/g, '') || 0);
+            const putForeignNetVolChange = putForeignNetVol2 - putForeignNetVol1;
+            
+            const putForeignNetAmt1 = parseInt(txo1.put.foreign.net_amount?.replace(/,/g, '') || 0);
+            const putForeignNetAmt2 = parseInt(txo2.put.foreign.net_amount?.replace(/,/g, '') || 0);
+            const putForeignNetAmtChange = putForeignNetAmt2 - putForeignNetAmt1;
+
+            // Put - 未平倉餘額變化
+            const putDealerOiNetVol1 = parseInt(txo1.put.dealer.oi_net_volume?.replace(/,/g, '') || 0);
+            const putDealerOiNetVol2 = parseInt(txo2.put.dealer.oi_net_volume?.replace(/,/g, '') || 0);
+            const putDealerOiNetVolChange = putDealerOiNetVol2 - putDealerOiNetVol1;
+            
+            const putDealerOiNetAmt1 = parseInt(txo1.put.dealer.oi_net_amount?.replace(/,/g, '') || 0);
+            const putDealerOiNetAmt2 = parseInt(txo2.put.dealer.oi_net_amount?.replace(/,/g, '') || 0);
+            const putDealerOiNetAmtChange = putDealerOiNetAmt2 - putDealerOiNetAmt1;
+            
+            const putForeignOiNetVol1 = parseInt(txo1.put.foreign.oi_net_volume?.replace(/,/g, '') || 0);
+            const putForeignOiNetVol2 = parseInt(txo2.put.foreign.oi_net_volume?.replace(/,/g, '') || 0);
+            const putForeignOiNetVolChange = putForeignOiNetVol2 - putForeignOiNetVol1;
+            
+            const putForeignOiNetAmt1 = parseInt(txo1.put.foreign.oi_net_amount?.replace(/,/g, '') || 0);
+            const putForeignOiNetAmt2 = parseInt(txo2.put.foreign.oi_net_amount?.replace(/,/g, '') || 0);
+            const putForeignOiNetAmtChange = putForeignOiNetAmt2 - putForeignOiNetAmt1;
+
+            // 填充 Call 交易變化表格
+            document.getElementById('callTradingChangeBody').innerHTML = `
+                <tr>
+                    <td class="category-cell">自營商</td>
+                    <td class="summary-value ${getChangeClass(callDealerNetVolChange)}">
+                        ${formatChange(callDealerNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(callDealerNetAmtChange)}">
+                        ${formatChange(callDealerNetAmtChange)}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="category-cell">外資</td>
+                    <td class="summary-value ${getChangeClass(callForeignNetVolChange)}">
+                        ${formatChange(callForeignNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(callForeignNetAmtChange)}">
+                        ${formatChange(callForeignNetAmtChange)}
+                    </td>
+                </tr>
+            `;
+
+            // 填充 Call 未平倉變化表格 (合併顯示)
+            document.getElementById('callOiChangeBody').innerHTML = `
+                <tr>
+                    <td class="summary-value ${getChangeClass(callDealerOiNetVolChange)}">
+                        ${formatChange(callDealerOiNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(callDealerOiNetAmtChange)}">
+                        ${formatChange(callDealerOiNetAmtChange)}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="summary-value ${getChangeClass(callForeignOiNetVolChange)}">
+                        ${formatChange(callForeignOiNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(callForeignOiNetAmtChange)}">
+                        ${formatChange(callForeignOiNetAmtChange)}
+                    </td>
+                </tr>
+            `;
+
+            // 填充 Put 交易變化表格
+            document.getElementById('putTradingChangeBody').innerHTML = `
+                <tr>
+                    <td class="category-cell">自營商</td>
+                    <td class="summary-value ${getChangeClass(putDealerNetVolChange)}">
+                        ${formatChange(putDealerNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(putDealerNetAmtChange)}">
+                        ${formatChange(putDealerNetAmtChange)}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="category-cell">外資</td>
+                    <td class="summary-value ${getChangeClass(putForeignNetVolChange)}">
+                        ${formatChange(putForeignNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(putForeignNetAmtChange)}">
+                        ${formatChange(putForeignNetAmtChange)}
+                    </td>
+                </tr>
+            `;
+
+            // 填充 Put 未平倉變化表格
+            document.getElementById('putOiChangeBody').innerHTML = `
+                <tr>
+                    <td class="summary-value ${getChangeClass(putDealerOiNetVolChange)}">
+                        ${formatChange(putDealerOiNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(putDealerOiNetAmtChange)}">
+                        ${formatChange(putDealerOiNetAmtChange)}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="summary-value ${getChangeClass(putForeignOiNetVolChange)}">
+                        ${formatChange(putForeignOiNetVolChange)}
+                    </td>
+                    <td class="summary-value ${getChangeClass(putForeignOiNetAmtChange)}">
+                        ${formatChange(putForeignOiNetAmtChange)}
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getChangeClass(value) {
+            if (value > 0) return 'up';
+            if (value < 0) return 'down';
+            return 'neutral';
+        }
+
+        function formatChange(value) {
+            const arrow = value > 0 ? '▲' : (value < 0 ? '▼' : '—');
+            const sign = value > 0 ? '+' : '';
+            return `${arrow} ${sign}${value.toLocaleString()}`;
+        }
+    </script>
+</body>
+
+</html>
